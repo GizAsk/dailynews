@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Günlük Bülten</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#15364A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bülten">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<style>
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #F2F5F6;
+  --paper: #FFFFFF;
+  --text: #17232B;
+  --muted: #66737B;
+  --faint: #929CA2;
+  --line: #D9E1E5;
+  --line-strong: #BFCBD1;
+
+  --ink: #15364A;
+  --blue: #4F84A2;
+  --blue-soft: #E9F1F5;
+  --red: #D45E55;
+  --red-soft: #F6E8E6;
+
+  --serif: Georgia, 'Times New Roman', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--serif);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- HEADER ---------- */
+.site-header {
+  background: var(--paper);
+  border-top: 4px solid var(--ink);
+}
+
+.topbar {
+  min-height: 38px;
+  padding: 0 clamp(18px, 4vw, 44px);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.topbar-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.live-pill { display: inline-flex; align-items: center; gap: 7px; color: var(--ink); white-space: nowrap; }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); }
+.topbar .subtitle { color: var(--faint); }
+
+.masthead {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 30px 24px 25px;
+  text-align: left;
+}
+
+.masthead-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 270px;
+  gap: 42px;
+  align-items: end;
+}
+
+.masthead-name {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.masthead h1 {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(54px, 8vw, 86px);
+  line-height: .88;
+  letter-spacing: -3px;
+  color: var(--text);
+}
+
+.masthead h1 .accent-word {
+  color: var(--ink);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.issue-line {
+  margin-top: 14px;
+  padding-top: 11px;
+  border-top: 3px double var(--text);
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  font-family: var(--sans);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.35px;
+  color: var(--muted);
+}
+
+.masthead-note {
+  border-left: 1px solid var(--line-strong);
+  padding-left: 22px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.masthead-note strong {
+  display: block;
+  color: var(--red);
+  font-family: var(--sans);
+  font-size: 9.5px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.personalization-trigger {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: #AFC4CF;
+  text-underline-offset: 3px;
+}
+
+.personalization-info {
+  display: none;
+  max-width: 680px;
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.personalization-info.open { display: block; }
+.personalization-info strong { color: var(--text); }
+
+/* ---------- NAV ---------- */
+.tab-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: rgba(255,255,255,.97);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.tab-bar::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  flex: 0 0 auto;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  padding: 13px 13px 11px;
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: .75px;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease;
+}
+.tab-btn:hover { color: var(--ink); }
+.tab-btn.active {
+  color: var(--ink) !important;
+  border-bottom-color: var(--red);
+}
+
+.tab-btn .badge {
+  display: inline-block;
+  margin-left: 5px;
+  color: var(--red);
+  font-size: 9px;
+  letter-spacing: 0;
+}
+
+/* ---------- CONTENT ---------- */
+.content {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 28px 24px 70px;
+}
+
+.sources-line {
+  font-family: var(--sans);
+  font-size: 9.5px;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--faint);
+  letter-spacing: .15px;
+  margin-bottom: 13px;
+}
+
+.general-note {
+  max-width: 700px;
+  margin: 0 auto 18px;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.prefs-bar-wrap { text-align: center; margin-bottom: 18px; }
+.prefs-bar {
+  display: inline;
+  font-family: var(--sans);
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.prefs-bar strong { color: var(--ink); }
+.reset-link {
+  cursor: pointer;
+  color: var(--red);
+  margin-left: 5px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.fetch-btn {
+  display: block;
+  margin: 0 auto 26px;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 9px 14px;
+  font-family: var(--sans);
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.fetch-btn:hover { background: var(--ink); color: #fff; }
+
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin: 26px 0 5px;
+  padding: 7px 0;
+  border-top: 3px solid var(--text);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+.section-title span:first-child { color: var(--text); }
+.unread-count {
+  color: var(--faint);
+  font-size: 9px;
+  font-weight: 650;
+  text-transform: none;
+  letter-spacing: .25px;
+}
+
+/* ---------- GENERAL FRONT PAGE ---------- */
+.front-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(250px, .8fr);
+  gap: 32px;
+  padding: 18px 0 25px;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.lead-story {
+  padding-right: 30px;
+  border-right: 1px solid var(--line);
+}
+
+.kicker {
+  font-family: var(--sans);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 9px;
+}
+
+.lead-title {
+  font-size: clamp(34px, 5.3vw, 56px);
+  line-height: 1.02;
+  letter-spacing: -1.3px;
+  font-weight: 700;
+  margin-bottom: 13px;
+}
+
+.lead-title a { color: inherit; text-decoration: none; }
+.lead-title a:hover { color: var(--ink); }
+
+.lead-summary {
+  max-width: 690px;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.story-tools,
+.article-meta,
+.mini-tools {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-family: var(--sans);
+  font-size: 9.5px;
+  color: var(--faint);
+}
+
+.text-action {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 9.5px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: #C8D2D8;
+  text-underline-offset: 3px;
+}
+.text-action:hover { color: var(--ink); }
+.text-action.active { color: var(--red); }
+
+.front-side { display: flex; flex-direction: column; }
+.mini-story {
+  padding: 0 0 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+.mini-story:last-child { border-bottom: 0; margin-bottom: 0; }
+
+.mini-title {
+  font-size: 22px;
+  line-height: 1.13;
+  letter-spacing: -.35px;
+  margin-bottom: 7px;
+}
+.mini-title a { color: inherit; text-decoration: none; }
+.mini-title a:hover { color: var(--ink); }
+
+.mini-summary {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.front-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 30px;
+  margin-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.grid-story {
+  padding: 19px 0 21px;
+  border-bottom: 1px solid var(--line);
+}
+.grid-story:nth-child(odd) { padding-right: 10px; }
+.grid-story:nth-child(even) { border-left: 1px solid var(--line); padding-left: 30px; }
+
+.grid-story .article-title {
+  font-size: 24px;
+  line-height: 1.14;
+}
+.grid-story a { color: inherit; text-decoration: none; }
+.grid-story a:hover .article-title { color: var(--ink); }
+
+/* ---------- STANDARD ARTICLE LIST ---------- */
+.article-card {
+  display: block;
+  margin: 0;
+  padding: 20px 0 21px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: none;
+  opacity: 0;
+  transform: translateY(5px);
+  animation: fadeSlideIn .28s ease forwards;
+}
+.article-card:hover { box-shadow: none; }
+.article-card.boosted { background: linear-gradient(to right, var(--blue-soft), transparent 42%); }
+.article-card.demoted { opacity: .5; }
+
+.article-source {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-bottom: 7px;
+  font-family: var(--sans);
+  font-size: 9px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--ink) !important;
+}
+
+.article-title {
+  font-size: 26px;
+  line-height: 1.13;
+  letter-spacing: -.45px;
+  font-weight: 700;
+  margin-bottom: 7px;
+}
+.article-card a { color: inherit; text-decoration: none; }
+.article-card a:hover .article-title { color: var(--ink); }
+
+.article-summary {
+  max-width: 760px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.vote-btn, .read-tag, .save-btn {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 9.5px;
+  cursor: pointer;
+}
+.vote-btn:hover, .save-btn:hover { color: var(--ink); }
+.vote-btn.liked, .save-btn.liked { color: var(--red); }
+.vote-btn.disliked { color: var(--red); }
+
+.dup-badge {
+  background: transparent;
+  color: var(--blue);
+  border: 0;
+  padding: 0;
+  border-radius: 0;
+  font-family: var(--sans);
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+}
+.dup-badge::before { content: "•"; margin-right: 5px; color: var(--line-strong); }
+
+.boost-indicator {
+  font-family: var(--sans);
+  font-size: 8px;
+  font-weight: 850;
+  color: var(--red);
+  text-transform: uppercase;
+  letter-spacing: .7px;
+}
+
+/* ---------- FILTERS ---------- */
+.filter-bar {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 7px 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+.filter-chip {
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  padding: 3px 0;
+  font-family: var(--sans);
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+}
+.filter-chip:hover { color: var(--ink); }
+.filter-chip.active { color: var(--ink); border-bottom-color: var(--red); }
+
+/* ---------- AUTHORS ---------- */
+.authors-panel {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  padding: 0 18px;
+  margin-bottom: 25px;
+  box-shadow: none;
+}
+.authors-panel .section-title { margin-top: 0; }
+
+.author-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.author-row:last-child { border-bottom: 0; }
+.author-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.author-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  background: var(--ink) !important;
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 800;
+}
+.author-name { font-size: 13px; font-weight: 700; }
+.author-reason {
+  margin-top: 2px;
+  font-family: var(--sans);
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: var(--faint);
+}
+.fav-badge {
+  margin-left: 6px;
+  color: var(--red);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  font-family: var(--sans);
+  font-size: 8px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+.author-actions { display: flex; align-items: center; gap: 9px; }
+.author-vote, .follow-btn {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 10px;
+}
+.author-vote.active, .follow-btn.following { color: var(--red); }
+
+/* ---------- EMPTY / LOADING ---------- */
+.loading-wrap { text-align: center; padding: 10px 20px 20px; }
+.loading-dots span {
+  display: inline-block;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  margin: 0 3px;
+  background: var(--ink);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.loading-dots span:nth-child(2) { animation-delay: .15s; background: var(--blue); }
+.loading-dots span:nth-child(3) { animation-delay: .3s; background: var(--red); }
+
+.loading-text {
+  margin-top: 10px;
+  font-family: var(--sans);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--faint);
+}
+
+.skeleton-card {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+.skeleton-body { display: flex; flex-direction: column; gap: 8px; }
+.skeleton-line {
+  height: 9px;
+  background: #E5EBEE;
+  animation: shimmer 1.4s ease infinite;
+}
+.skeleton-line.w60 { width: 60%; }
+.skeleton-line.w90 { width: 90%; }
+.skeleton-line.w40 { width: 40%; }
+
+.empty-state { text-align: center; padding: 52px 20px; color: var(--faint); }
+.empty-icon { font-size: 30px; margin-bottom: 12px; opacity: .65; }
+.empty-text { font-family: var(--sans); font-size: 12px; }
+
+.footer {
+  padding: 18px 20px;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0%,80%,100% { opacity:.3; transform:scale(.8); }
+  40% { opacity:1; transform:scale(1); }
+}
+@keyframes shimmer {
+  0% { opacity:.45; }
+  50% { opacity:.9; }
+  100% { opacity:.45; }
+}
+
+@media (max-width: 760px) {
+  .topbar .subtitle { display: none; }
+  .masthead-grid { grid-template-columns: 1fr; gap: 20px; }
+  .masthead-note { border-left: 0; border-top: 1px solid var(--line); padding: 13px 0 0; }
+  .front-page { grid-template-columns: 1fr; gap: 22px; }
+  .lead-story { border-right: 0; border-bottom: 1px solid var(--line); padding: 0 0 22px; }
+  .front-grid { grid-template-columns: 1fr; }
+  .grid-story:nth-child(even) { border-left: 0; padding-left: 0; }
+  .grid-story:nth-child(odd) { padding-right: 0; }
+}
+
+@media (max-width: 520px) {
+  .topbar { padding: 0 12px; }
+  .masthead { padding: 24px 15px 20px; }
+  .masthead h1 { font-size: 52px; letter-spacing: -2px; }
+  .issue-line { font-size: 8.5px; gap: 10px; }
+  .content { padding: 21px 14px 50px; }
+  .tab-bar { justify-content: flex-start; }
+  .tab-btn { padding: 11px 10px 9px; font-size: 9.2px; }
+  .lead-title { font-size: 36px; }
+  .lead-summary { font-size: 14.5px; }
+  .mini-title { font-size: 20px; }
+  .article-title { font-size: 22px; }
+}
+
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="live-pill"><span class="live-dot"></span> Güncel Akış</span>
+      <span class="subtitle">Kişisel Haber Masası</span>
+    </div>
+    <span class="dateline" id="dateline"></span>
+  </div>
+
+  <div class="masthead">
+    <div class="masthead-grid">
+      <div>
+        <div class="masthead-name">
+          <h1>Günlük <span class="accent-word">Bülten</span></h1>
+        </div>
+        <div class="issue-line">
+          <span>Günün öne çıkanları, tek sayfada</span>
+          <span>RSS tabanlı kişisel seçki</span>
+        </div>
+      </div>
+
+      <div class="masthead-note">
+        <strong>Sana göre</strong>
+        Beğendiğin kaynak ve konular zamanla sıralamayı etkiler.
+        <button class="personalization-trigger" type="button" onclick="togglePersonalizationInfo()">Nasıl çalışıyor?</button>
+        <div class="personalization-info" id="personalizationInfo">
+          <strong>Kişiselleştirme</strong>
+          Beğendiğin haberlerin kaynakları ve başlıklarındaki konular daha yukarı taşınır; beğenmediklerin daha aşağıda gösterilir. Bu bir filtre değil, sıralamayı zamanla sana yaklaştıran bir sistemdir.
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<nav class="tab-bar" id="tabBar"></nav>
+<main class="content" id="mainContent"></main>
+<footer class="footer">RSS tabanlı · Tercihlerin tarayıcında saklanır · Haberler kendi kaynaklarında açılır</footer>
+
+<script>
+window.addEventListener("error", function(e){ console.error("Page error:", e.message, e.filename, e.lineno); });
+// ══════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════
+
+const CATEGORIES = [
+  { id: "general", label: "Genel", icon: "◉", color: "#15364A", isGeneral: true },
+  { id: "politics_tr", label: "TR Siyaset", icon: "🇹🇷", color: "#D45E55" },
+  { id: "politics_world", label: "Dünya", icon: "🌍", color: "#4F84A2" },
+  { id: "ai",       label: "Yapay Zeka", icon: "AI", color: "#15364A" },
+  { id: "tech",     label: "Teknoloji", icon: "⚡", color: "#4F84A2" },
+  { id: "health",   label: "Sağlık", icon: "＋", color: "#5A788A" },
+  { id: "sports",   label: "Spor", icon: "●", color: "#D45E55" },
+  { id: "columns",  label: "Köşe Yazıları", icon: "✎", color: "#15364A" },
+  { id: "saved",    label: "Okuma Listem", icon: "⌑", color: "#D45E55", isSpecial: true },
+];
+
+const GNEWS = "https://news.google.com/rss/search?q=";
+const GNEWS_TR = "&hl=tr&gl=TR&ceid=TR:tr";
+const GNEWS_EN = "&hl=en&gl=US&ceid=US:en";
+
+const FEEDS = {
+  politics_tr: [
+    { name: "Oksijen",        url: GNEWS + encodeURIComponent("site:gazeteoksijen.com türkiye siyaset") + GNEWS_TR },
+    { name: "BBC Türkçe",     url: "https://feeds.bbci.co.uk/turkce/rss.xml" },
+    { name: "T24 Siyaset",    url: GNEWS + encodeURIComponent("site:t24.com.tr siyaset OR meclis OR hükümet OR muhalefet") + GNEWS_TR },
+    { name: "Diken Siyaset",  url: GNEWS + encodeURIComponent("site:diken.com.tr siyaset OR politika") + GNEWS_TR },
+    { name: "Medyascope",     url: GNEWS + encodeURIComponent("site:medyascope.tv siyaset OR politika OR gündem") + GNEWS_TR },
+    { name: "BirGün",         url: GNEWS + encodeURIComponent("site:birgun.net siyaset OR politika") + GNEWS_TR },
+    { name: "Cumhuriyet",     url: GNEWS + encodeURIComponent("site:cumhuriyet.com.tr siyaset OR politika") + GNEWS_TR },
+  ],
+  politics_world: [
+    { name: "Oksijen Dünya",  url: GNEWS + encodeURIComponent("site:gazeteoksijen.com dünya") + GNEWS_TR },
+    { name: "Al Jazeera",      url: "https://www.aljazeera.com/xml/rss/all.xml" },
+    { name: "Guardian",        url: "https://www.theguardian.com/world/rss" },
+    { name: "BBC World",       url: "https://feeds.bbci.co.uk/news/world/rss.xml" },
+    { name: "Reuters",         url: GNEWS + encodeURIComponent("site:reuters.com world politics diplomacy") + GNEWS_EN },
+    { name: "Foreign Affairs", url: GNEWS + encodeURIComponent("site:foreignaffairs.com") + GNEWS_EN },
+  ],
+  ai: [
+    { name: "AI (Google TR)",  url: GNEWS + encodeURIComponent("yapay zeka AI ChatGPT") + GNEWS_TR },
+    { name: "AI (Google EN)",  url: GNEWS + encodeURIComponent("artificial intelligence AI LLM GPT Claude") + GNEWS_EN , lang: "en" },
+    { name: "OpenAI Blog",     url: GNEWS + encodeURIComponent("site:openai.com") + GNEWS_EN , lang: "en" },
+    { name: "DeepMind",        url: GNEWS + encodeURIComponent("site:deepmind.google") + GNEWS_EN , lang: "en" },
+    { name: "MIT AI",          url: GNEWS + encodeURIComponent("site:technologyreview.com artificial intelligence") + GNEWS_EN , lang: "en" },
+    { name: "Ars AI",          url: GNEWS + encodeURIComponent("site:arstechnica.com AI artificial intelligence") + GNEWS_EN , lang: "en" },
+    { name: "VentureBeat AI",  url: GNEWS + encodeURIComponent("site:venturebeat.com AI") + GNEWS_EN , lang: "en" },
+  ],
+  tech: [
+    { name: "TechCrunch",     url: "https://techcrunch.com/feed/" , lang: "en" },
+    { name: "The Verge",      url: "https://www.theverge.com/rss/index.xml" , lang: "en" },
+    { name: "Ars Technica",    url: "https://feeds.arstechnica.com/arstechnica/index" , lang: "en" },
+    { name: "Wired",           url: "https://www.wired.com/feed/rss" , lang: "en" },
+    { name: "Hacker News",     url: "https://hnrss.org/frontpage" , lang: "en" },
+    { name: "Webrazzi",        url: "https://webrazzi.com/feed/" },
+    { name: "MIT Tech Review", url: "https://www.technologyreview.com/feed/" , lang: "en" },
+  ],
+  health: [
+    { name: "Sağlık TR",       url: GNEWS + encodeURIComponent("sağlık tıp hastalık tedavi") + GNEWS_TR },
+    { name: "Oksijen Sağlık",  url: GNEWS + encodeURIComponent("site:gazeteoksijen.com sağlık") + GNEWS_TR },
+    { name: "BBC Sağlık",      url: GNEWS + encodeURIComponent("site:bbc.com/turkce sağlık OR tıp") + GNEWS_TR },
+    { name: "WHO",              url: GNEWS + encodeURIComponent("WHO World Health Organization") + GNEWS_EN , lang: "en" },
+    { name: "STAT News",        url: GNEWS + encodeURIComponent("site:statnews.com") + GNEWS_EN , lang: "en" },
+    { name: "Medical News",     url: GNEWS + encodeURIComponent("site:medicalnewstoday.com") + GNEWS_EN , lang: "en" },
+    { name: "Nature Medicine",  url: GNEWS + encodeURIComponent("site:nature.com medicine health research") + GNEWS_EN , lang: "en" },
+  ],
+  sports: [
+    { name: "Fanatik",         url: "https://www.fanatik.com.tr/rss" },
+    { name: "NBA",             url: GNEWS + encodeURIComponent("NBA basketball scores trades") + GNEWS_EN , lang: "en" },
+    { name: "EuroLeague",      url: GNEWS + encodeURIComponent("EuroLeague Final Four basketball") + GNEWS_EN , lang: "en" },
+    { name: "FIBA",            url: GNEWS + encodeURIComponent("FIBA Basketball World Cup") + GNEWS_EN , lang: "en" },
+    { name: "Olympics",        url: GNEWS + encodeURIComponent("Olympic Games 2026 OR 2028 Paralympics") + GNEWS_EN , lang: "en" },
+    { name: "Futbol TR",       url: GNEWS + encodeURIComponent("Süper Lig Şampiyonlar Ligi futbol") + GNEWS_TR },
+    { name: "UEFA/FIFA",       url: GNEWS + encodeURIComponent("Champions League Europa League FIFA World Cup") + GNEWS_EN , lang: "en" },
+    { name: "BBC Sport",       url: "https://feeds.bbci.co.uk/sport/rss.xml" , lang: "en" },
+    { name: "ESPN",            url: "https://www.espn.com/espn/rss/news" , lang: "en" },
+  ],
+  columns: [
+    { name: "Oksijen Yazarlar", url: GNEWS + encodeURIComponent("site:gazeteoksijen.com yazarlar OR yorum OR analiz") + GNEWS_TR },
+    { name: "T24 Yazarlar",    url: "https://t24.com.tr/rss/yazarlar" },
+    { name: "Diken",            url: "https://www.diken.com.tr/feed/" },
+    { name: "Stratechery",      url: "https://stratechery.com/feed/" },
+    { name: "Kottke",           url: "https://feeds.kottke.org/main" },
+    { name: "Seth Godin",       url: "https://seths.blog/feed/" },
+    { name: "Brain Pickings",   url: "https://feeds.feedburner.com/brainpickings/rss" },
+    { name: "Farnam Street",    url: "https://fs.blog/feed/" },
+    { name: "Paul Graham",      url: "https://www.aaronswartz.com/2002/feeds/pgessays.rss" },
+    { name: "Tim Ferriss",      url: "https://tim.blog/feed/" },
+  ],
+};
+
+// Oksijen haberleri Google News RSS ile çekiliyor, üyelik ile okunur
+
+const SUGGESTED_AUTHORS = [
+  // ── Türk yazarlar & düşünürler ──
+  { name: "Ece Temelkuran", reason: "Siyaset ve toplum analizi, keskin üslup", isFavorite: true, tags: ["politics","culture"] },
+  { name: "Gündüz Vasaf", reason: "Felsefe, psikoloji ve toplum yazıları", isFavorite: true, tags: ["philosophy","culture"] },
+  { name: "Ezgi Başaran", reason: "Gazeteci & akademisyen, Türk siyaseti, Ortadoğu, Oxford", tags: ["politics","journalism"] },
+  { name: "Elif Şafak", reason: "Roman, kültür yazıları, uluslararası perspektif", tags: ["culture","literature"] },
+  { name: "Zeynep Tufekci", reason: "Teknoloji & toplum kesişimi, akademisyen", tags: ["tech","politics"] },
+  { name: "Can Dündar", reason: "Gazetecilik, siyaset analizi", tags: ["politics","journalism"] },
+  { name: "Daron Acemoğlu", reason: "Nobel ödüllü ekonomist, kurumsal analiz", tags: ["economics","politics"] },
+  { name: "Zülfü Livaneli", reason: "Kültür, sanat ve toplum üzerine", tags: ["culture","literature"] },
+  { name: "Cem Say", reason: "Yapay zeka ve bilişim, Boğaziçi akademisyen", tags: ["tech","science"] },
+  { name: "Selçuk Şirin", reason: "Eğitim ve gençlik politikaları, NYU profesörü", tags: ["education","politics"] },
+  { name: "Hasan Cemal", reason: "Politik analiz, tarihsel perspektif", tags: ["politics","history"] },
+  { name: "Nuray Mert", reason: "Siyaset ve demokrasi yorumları", tags: ["politics"] },
+
+  // ── Uluslararası düşünürler & yazarlar ──
+  { name: "Yuval Noah Harari", reason: "Sapiens, tarih ve gelecek vizyonu", tags: ["philosophy","history","tech"] },
+  { name: "Noam Chomsky", reason: "Dilbilim, siyaset felsefesi, medya eleştirisi", tags: ["politics","philosophy"] },
+  { name: "Paul Krugman", reason: "Nobel ekonomist, NYT köşe yazarı", tags: ["economics"] },
+  { name: "Thomas Friedman", reason: "Küreselleşme, Ortadoğu, teknoloji — NYT", tags: ["politics","tech","economics"] },
+  { name: "Fareed Zakaria", reason: "Uluslararası ilişkiler, CNN/Washington Post", tags: ["politics","world"] },
+  { name: "Malcolm Gladwell", reason: "Sosyal bilimler, davranış analizi, storytelling", tags: ["culture","science"] },
+  { name: "Nassim Nicholas Taleb", reason: "Risk, belirsizlik, Black Swan teorisi", tags: ["economics","philosophy"] },
+  { name: "Brené Brown", reason: "Kırılganlık, liderlik, insan davranışı", tags: ["culture","leadership"] },
+  { name: "Adam Grant", reason: "Organizasyonel psikoloji, Wharton profesörü", tags: ["leadership","culture"] },
+  { name: "Tim Ferriss", reason: "Verimlilik, girişimcilik, deney odaklı yaşam", tags: ["tech","leadership"] },
+
+  // ── Teknoloji düşünürleri ──
+  { name: "Ben Thompson", reason: "Stratechery — teknoloji stratejisi ve iş modeli analizi", tags: ["tech","economics"] },
+  { name: "Casey Newton", reason: "Platformer — sosyal medya & tech haberleri", tags: ["tech"] },
+  { name: "Kara Swisher", reason: "Teknoloji endüstrisi yorumları", tags: ["tech"] },
+  { name: "Paul Graham", reason: "Y Combinator kurucusu, startup felsefesi", tags: ["tech","leadership"] },
+  { name: "Naval Ravikant", reason: "Girişimcilik, zenginlik ve mutluluk felsefesi", tags: ["tech","philosophy"] },
+  { name: "Maria Popova", reason: "The Marginalian — sanat, bilim, felsefe kesişimi", tags: ["culture","philosophy","science"] },
+  { name: "Shane Parrish", reason: "Farnam Street — zihinsel modeller, karar verme", tags: ["philosophy","leadership"] },
+];
+
+const RSS2JSON = "https://api.rss2json.com/v1/api.json?rss_url=";
+const TOPTAL = "https://www.toptal.com/developers/feed2json/convert?url=";
+const ALLORIGINS = "https://api.allorigins.win/get?url=";
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+
+let activeTab = "general";
+let articles = {};
+let loading = {};
+let followedAuthors = new Set(["Ece Temelkuran", "Gündüz Vasaf"]);
+let fetchedTabs = new Set();
+let sourceFilter = "all";
+let feedErrors = [];
+let savedArticles = [];
+
+// PREFERENCE ENGINE
+let prefs = { likedSources: {}, dislikedSources: {}, likedKeywords: {}, dislikedKeywords: {}, likedAuthors: {}, dislikedAuthors: {} };
+
+function loadPrefs() {
+  try {
+    const saved = localStorage.getItem("bulten_prefs");
+    if (saved) prefs = JSON.parse(saved);
+    const savedFollows = localStorage.getItem("bulten_follows");
+    if (savedFollows) followedAuthors = new Set(JSON.parse(savedFollows));
+    const savedBookmarks = localStorage.getItem("bulten_saved");
+    if (savedBookmarks) savedArticles = JSON.parse(savedBookmarks);
+  } catch(e) {}
+}
+function savePrefs() {
+  try {
+    localStorage.setItem("bulten_prefs", JSON.stringify(prefs));
+    localStorage.setItem("bulten_follows", JSON.stringify([...followedAuthors]));
+    localStorage.setItem("bulten_saved", JSON.stringify(savedArticles));
+  } catch(e) {}
+}
+loadPrefs();
+
+function extractKeywords(title) {
+  const stops = new Set(["bir","ve","ile","için","bu","da","de","den","dan","mi","mı","ne","ya","ki","hem","ama","her","olan","gibi","daha","son","the","a","an","in","of","to","for","and","is","on","at","by","with","from","that","this","how","why","what"]);
+  return (title||"").toLowerCase().replace(/[^a-zçğıöşü0-9\s]/g,"").split(/\s+/).filter(w => w.length > 3 && !stops.has(w));
+}
+
+function recordVote(article, isLike) {
+  const bucket = isLike ? "likedSources" : "dislikedSources";
+  const oppBucket = isLike ? "dislikedSources" : "likedSources";
+  prefs[bucket][article.source] = (prefs[bucket][article.source]||0) + 1;
+  if (prefs[oppBucket][article.source] > 0) prefs[oppBucket][article.source]--;
+
+  const kwBucket = isLike ? "likedKeywords" : "dislikedKeywords";
+  const kwOpp = isLike ? "dislikedKeywords" : "likedKeywords";
+  extractKeywords(article.title).forEach(kw => {
+    prefs[kwBucket][kw] = (prefs[kwBucket][kw]||0) + 1;
+    if (prefs[kwOpp][kw] > 0) prefs[kwOpp][kw]--;
+  });
+  savePrefs();
+}
+
+function recordAuthorVote(name, isLike) {
+  const b = isLike ? "likedAuthors" : "dislikedAuthors";
+  const o = isLike ? "dislikedAuthors" : "likedAuthors";
+  prefs[b][name] = (prefs[b][name]||0) + 1;
+  delete prefs[o][name];
+  savePrefs();
+}
+
+function scoreArticle(article) {
+  let score = 0;
+  score += (prefs.likedSources[article.source]||0) * 3;
+  score -= (prefs.dislikedSources[article.source]||0) * 3;
+  extractKeywords(article.title).forEach(kw => {
+    score += (prefs.likedKeywords[kw]||0) * 2;
+    score -= (prefs.dislikedKeywords[kw]||0) * 2;
+  });
+  return score;
+}
+
+function getTotalVotes() {
+  let t = 0;
+  for (const k in prefs.likedSources) t += prefs.likedSources[k];
+  for (const k in prefs.dislikedSources) t += prefs.dislikedSources[k];
+  for (const k in prefs.likedAuthors) t += prefs.likedAuthors[k];
+  for (const k in prefs.dislikedAuthors) t += prefs.dislikedAuthors[k];
+  return t;
+}
+
+// ══════════════════════════════════════
+// DATE
+// ══════════════════════════════════════
+document.getElementById("dateline").textContent = new Date().toLocaleDateString("tr-TR", {
+  weekday: "long", year: "numeric", month: "long", day: "numeric",
+});
+
+// ══════════════════════════════════════
+// DEDUP & HELPERS
+// ══════════════════════════════════════
+function normalize(s) { return (s||"").toLowerCase().replace(/[^a-zçğıöşü0-9]/g,"").slice(0,60); }
+function dedup(items) {
+  const seen = new Map(), out = [];
+  for (const it of items) {
+    const k = normalize(it.title);
+    if (k.length < 10) { out.push(it); continue; }
+    if (seen.has(k)) { const o = seen.get(k); if (!o._dupSources) o._dupSources = [o.source]; o._dupSources.push(it.source); }
+    else { seen.set(k, it); out.push(it); }
+  }
+  return out;
+}
+function strip(html) { const d = document.createElement("div"); d.innerHTML = html||""; return d.textContent.trim(); }
+const AVATAR_PALETTE = ["#356F94","#5F8EAF","#6F8B7A","#A9822D","#C45D57","#7B8790"];
+function hashColor(str) {
+  let h = 0;
+  for (let i = 0; i < (str||"").length; i++) h = (h * 31 + str.charCodeAt(i)) & 0xffffffff;
+  return AVATAR_PALETTE[Math.abs(h) % AVATAR_PALETTE.length];
+}
+function timeAgo(ds) {
+  if (!ds) return "";
+  const m = Math.floor((Date.now() - new Date(ds).getTime()) / 60000);
+  if (m < 0) return "";
+  if (m < 60) return m + " dk önce";
+  const h = Math.floor(m/60);
+  if (h < 24) return h + " saat önce";
+  return Math.floor(h/24) + " gün önce";
+}
+
+// ══════════════════════════════════════
+// ARTICLE VOTES STATE
+// ══════════════════════════════════════
+let articleVotes = {}; // id -> "like" | "dislike"
+
+// ══════════════════════════════════════
+const GENERAL_CATEGORIES = ["politics_tr","ai","tech","health","sports"];
+const GENERAL_FEEDS_PER_CATEGORY = 2;
+const GENERAL_MAX_ITEMS = 18;
+
+const EXCLUDE_KEYWORDS = {
+  politics_tr: ["kan şekeri","diyet","burç","astroloji","yemek tarifi","cilt bakım","makyaj","horoscope","recipe","güzellik","sağlık ipucu","kalori","zayıflama","kilo ver","tedavi yöntem","hastalık belirtileri","vitamin","takviye","kolesterol"],
+  politics_world: ["kan şekeri","diyet","burç","astroloji","yemek tarifi","recipe","horoscope","beauty","skincare","weight loss","health tips","vitamin","cholesterol","symptoms"],
+  ai: [], tech: [], health: [], columns: [],
+  sports: ["kan şekeri","diyet","burç","astroloji","yemek tarifi","makyaj","recipe","horoscope"],
+};
+function applyCategoryFilter(items, catId) {
+  const excludeList = EXCLUDE_KEYWORDS[catId] || [];
+  if (!excludeList.length) return items;
+  return items.filter(a => { const text=(a.title+" "+a.summary).toLowerCase(); return !excludeList.some(kw=>text.includes(kw)); });
+}
+const GENERAL_WINDOW_HOURS = 72;
+function hoursAgo(pubDate) {
+  if (!pubDate) return Infinity;
+  return (Date.now()-new Date(pubDate).getTime())/3600000;
+}
+function withinGeneralWindow(article) {
+  const h = hoursAgo(article.pubDate);
+  return h >= -1 && h <= GENERAL_WINDOW_HOURS;
+}
+function freshnessPoints(pubDate) {
+  const hours=hoursAgo(pubDate);
+  if (hours<=4) return 5; if (hours<=12) return 4; if (hours<=24) return 3; if (hours<=48) return 2; if (hours<=72) return 1; return 0;
+}
+function generalScore(article) {
+  // "Önemli" = birden fazla kaynakta çıkmış (coverage) ağırlıklı; tazelik sadece eşitlik bozucu.
+  const coverage=article._dupSources ? Math.min(article._dupSources.length-1,5)*4 : 0;
+  const preference=Math.max(-2,Math.min(2,scoreArticle(article)));
+  return coverage + freshnessPoints(article.pubDate) + preference;
+}
+function selectGeneralHighlights(items) {
+  const ranked=items.filter(withinGeneralWindow).map(a=>({...a,_score:scoreArticle(a),_generalScore:generalScore(a)}));
+  const selected=[], ids=new Set();
+  GENERAL_CATEGORIES.forEach(catId=>{
+    ranked.filter(a=>a._category===catId).sort((a,b)=>(b._generalScore-a._generalScore)||(new Date(b.pubDate||0)-new Date(a.pubDate||0))).slice(0,2).forEach(a=>{if(!ids.has(a.id)){selected.push(a);ids.add(a.id);}});
+  });
+  ranked.sort((a,b)=>(b._generalScore-a._generalScore)||(new Date(b.pubDate||0)-new Date(a.pubDate||0))).forEach(a=>{if(selected.length<GENERAL_MAX_ITEMS&&!ids.has(a.id)){selected.push(a);ids.add(a.id);}});
+  return selected.sort((a,b)=>(b._generalScore-a._generalScore)||(new Date(b.pubDate||0)-new Date(a.pubDate||0))).slice(0,GENERAL_MAX_ITEMS);
+}
+
+// FETCH — multi-proxy with fallback
+// ══════════════════════════════════════
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Try rss2json first, then toptal feed2json, then allorigins raw parse
+async function fetchViaRss2Json(url) {
+  const r = await fetch(RSS2JSON + encodeURIComponent(url));
+  if (!r.ok) throw new Error("rss2json " + r.status);
+  const d = await r.json();
+  if (d.status !== "ok" || !d.items || d.items.length === 0) throw new Error("rss2json empty");
+  return d.items.map(it => ({ title: it.title, description: it.description, link: it.link, author: it.author, pubDate: it.pubDate }));
+}
+
+async function fetchViaToptal(url) {
+  const r = await fetch(TOPTAL + encodeURIComponent(url));
+  if (!r.ok) throw new Error("toptal " + r.status);
+  const d = await r.json();
+  if (!d.items || d.items.length === 0) throw new Error("toptal empty");
+  return d.items.map(it => ({
+    title: it.title,
+    description: it.content_html || it.summary || "",
+    link: it.url || it.external_url || "",
+    author: it.author ? it.author.name : "",
+    pubDate: it.date_published || "",
+  }));
+}
+
+async function fetchViaAllOrigins(url) {
+  const r = await fetch(ALLORIGINS + encodeURIComponent(url));
+  if (!r.ok) throw new Error("allorigins " + r.status);
+  const d = await r.json();
+  if (!d.contents) throw new Error("allorigins empty");
+  // Parse XML manually
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(d.contents, "text/xml");
+  const items = doc.querySelectorAll("item");
+  if (items.length === 0) {
+    // Try Atom format
+    const entries = doc.querySelectorAll("entry");
+    return [...entries].map(e => {
+      const desc = e.querySelector("summary,content")?.textContent || "";
+      return {
+        title: e.querySelector("title")?.textContent || "",
+        description: desc,
+        link: e.querySelector("link")?.getAttribute("href") || e.querySelector("link")?.textContent || "",
+        author: e.querySelector("author name")?.textContent || "",
+        pubDate: e.querySelector("published,updated")?.textContent || "",
+      };
+    });
+  }
+  return [...items].map(it => {
+    const desc = it.querySelector("description,content\\:encoded")?.textContent || "";
+    return {
+      title: it.querySelector("title")?.textContent || "",
+      description: desc,
+      link: it.querySelector("link")?.textContent || "",
+      author: it.querySelector("author,dc\\:creator")?.textContent || "",
+      pubDate: it.querySelector("pubDate,dc\\:date")?.textContent || "",
+    };
+  });
+}
+
+async function fetchFeedRaw(url) {
+  // Try proxies in order
+  try { return await fetchViaRss2Json(url); } catch(e) { console.warn("rss2json fail:", e.message); }
+  await delay(200);
+  try { return await fetchViaToptal(url); } catch(e) { console.warn("toptal fail:", e.message); }
+  await delay(200);
+  try { return await fetchViaAllOrigins(url); } catch(e) { console.warn("allorigins fail:", e.message); }
+  return null;
+}
+
+async function fetchFeed(feed) {
+  try {
+    const isGNews = feed.url.includes("news.google.com");
+    const rawItems = await fetchFeedRaw(feed.url);
+    if (!rawItems || rawItems.length === 0) {
+      feedErrors.push(feed.name);
+      return [];
+    }
+    return rawItems.map((it, i) => {
+      let title = strip(it.title || "");
+      let realSource = feed.name;
+      if (isGNews && title.includes(" - ")) {
+        const parts = title.split(" - ");
+        const possibleSource = parts.pop().trim();
+        if (possibleSource.length < 40 && possibleSource.length > 1) {
+          realSource = possibleSource;
+          title = parts.join(" - ").trim();
+        }
+      }
+      const desc = strip(it.description || "").replace(/<[^>]*>/g,"");
+      return {
+        id: feed.name+"_"+i+"_"+normalize(title).slice(0,20),
+        title: title,
+        summary: desc.slice(0,220) + (desc.length > 220 ? "…" : ""),
+        link: it.link || "",
+        source: realSource,
+        author: it.author || "",
+        time: timeAgo(it.pubDate),
+        pubDate: it.pubDate || "",
+        isOksijen: !!feed.isOksijen,
+      };
+    }).filter(a => a.title.length > 5);
+  } catch(e) {
+    console.warn("Feed err:", feed.name, e);
+    feedErrors.push(feed.name);
+    return [];
+  }
+}
+
+async function fetchGeneral() {
+  loading.general=true; sourceFilter="all"; feedErrors=[]; articles.general=[]; renderContent();
+  let pool=[];
+  for (const sourceCat of GENERAL_CATEGORIES) {
+    const feeds=(FEEDS[sourceCat]||[]).filter(f=>f.lang!=="en").slice(0,GENERAL_FEEDS_PER_CATEGORY);
+    for (let i=0;i<feeds.length;i++) {
+      if (pool.length>0) await delay(250);
+      const items=await fetchFeed(feeds[i]);
+      const tagged=applyCategoryFilter(items,sourceCat).map(a=>({...a,_category:sourceCat}));
+      pool.push(...tagged);
+      if (tagged.length>0) { const d=dedup([...pool].sort((a,b)=>new Date(b.pubDate||0)-new Date(a.pubDate||0))); articles.general=selectGeneralHighlights(d); renderContent(); }
+    }
+  }
+  const d=dedup([...pool].sort((a,b)=>new Date(b.pubDate||0)-new Date(a.pubDate||0)));
+  articles.general=selectGeneralHighlights(d); fetchedTabs.add("general"); loading.general=false; renderTabs(); renderContent();
+}
+
+async function fetchCategory(catId) {
+  if (catId==="general") return fetchGeneral();
+  loading[catId]=true; sourceFilter="all"; feedErrors=[]; renderContent();
+  const feeds=FEEDS[catId]||[]; let all=[];
+  for (let i=0;i<feeds.length;i++) {
+    if (i>0) await delay(300);
+    const items=await fetchFeed(feeds[i]); all.push(...items);
+    if (items.length>0) { articles[catId]=dedup([...all].sort((a,b)=>new Date(b.pubDate||0)-new Date(a.pubDate||0))); renderContent(); }
+  }
+  all.sort((a,b)=>new Date(b.pubDate||0)-new Date(a.pubDate||0));
+  all=applyCategoryFilter(dedup(all),catId);
+  if (getTotalVotes()>2) {
+    all.forEach(a=>{a._score=scoreArticle(a);});
+    all.sort((a,b)=>{ const sa=a._score>2?2:a._score<-2?0:1; const sb=b._score>2?2:b._score<-2?0:1; if(sa!==sb)return sb-sa; return new Date(b.pubDate||0)-new Date(a.pubDate||0); });
+  }
+  articles[catId]=all; fetchedTabs.add(catId); loading[catId]=false; renderTabs(); renderContent();
+}
+
+// ══════════════════════════════════════
+// ACTIONS
+// ══════════════════════════════════════
+function togglePersonalizationInfo() {
+  const panel=document.getElementById("personalizationInfo"); if(panel) panel.classList.toggle("open");
+}
+function toggleFollow(name) { followedAuthors.has(name)?followedAuthors.delete(name):followedAuthors.add(name); savePrefs(); renderContent(); }
+function setSourceFilter(s) { sourceFilter=s; renderContent(); }
+function toggleSave(articleId) {
+  const idx=savedArticles.findIndex(a=>a.id===articleId);
+  if (idx>=0) savedArticles.splice(idx,1);
+  else {
+    for (const catId in articles) {
+      const found=(articles[catId]||[]).find(a=>a.id===articleId);
+      if (found) { savedArticles.unshift({...found,savedAt:new Date().toISOString(),fromCategory:found._category||catId}); break; }
+    }
+  }
+  savePrefs(); renderTabs(); renderContent();
+}
+function isSaved(articleId) { return savedArticles.some(a=>a.id===articleId); }
+function voteArticle(id,type) { for (const catId in articles) { const found=(articles[catId]||[]).find(a=>a.id===id); if(found){recordVote(found,type==="like");break;} } articleVotes[id]=type; renderContent(); }
+function voteAuthor(name,type) { recordAuthorVote(name,type==="like"); renderContent(); }
+function resetPrefs() { if(confirm("Tüm kişiselleştirme tercihleri sıfırlansın mı?")){ prefs={likedSources:{},dislikedSources:{},likedKeywords:{},dislikedKeywords:{},likedAuthors:{},dislikedAuthors:{}}; articleVotes={}; savePrefs(); renderContent(); } }
+
+// ══════════════════════════════════════
+// RENDER TABS
+// ══════════════════════════════════════
+function renderTabs() {
+  const bar=document.getElementById("tabBar"); bar.innerHTML="";
+  CATEGORIES.forEach(cat=>{
+    const btn=document.createElement("button"), act=activeTab===cat.id;
+    btn.className="tab-btn"+(act?" active":""); btn.style.color=act?cat.color:""; btn.innerHTML=cat.label;
+    if(cat.id==="saved"&&savedArticles.length>0) btn.innerHTML+=` <span class="badge">${savedArticles.length}</span>`;
+    btn.onclick=()=>{activeTab=cat.id;sourceFilter="all";renderTabs();renderContent();}; bar.appendChild(btn);
+  });
+}
+
+// ══════════════════════════════════════
+// RENDER CONTENT
+// ══════════════════════════════════════
+function renderContent() {
+  const main=document.getElementById("mainContent"), cat=CATEGORIES.find(c=>c.id===activeTab), isL=loading[activeTab], hasF=fetchedTabs.has(activeTab), cur=articles[activeTab]||[], totalVotes=getTotalVotes();
+  let h="";
+
+  const tools = (a, compact=false) => {
+    const v=articleVotes[a.id];
+    return `<div class="${compact?'mini-tools':'story-tools'}">
+      <span>${a.time||''}</span>
+      <button class="text-action ${v==='like'?'active':''}" onclick="voteArticle('${a.id}','like')" title="Bunu daha çok göster">Beğen</button>
+      <button class="text-action ${v==='dislike'?'active':''}" onclick="voteArticle('${a.id}','dislike')" title="Bunu daha az göster">Az göster</button>
+      <button class="text-action ${isSaved(a.id)?'active':''}" onclick="toggleSave('${a.id}')">${isSaved(a.id)?'Kaydedildi':'Kaydet'}</button>
+    </div>`;
+  };
+
+  const catMeta = a => CATEGORIES.find(c=>c.id===a._category);
+  const kicker = a => {
+    const c=catMeta(a);
+    return `${c?c.label+' · ':''}${a.source}${a._dupSources?' · '+a._dupSources.length+' kaynakta':''}`;
+  };
+
+  if(activeTab==="saved") {
+    if(savedArticles.length===0) {
+      h+=`<div class="empty-state"><div class="empty-icon">⌑</div><p class="empty-text">Okuma listende henüz haber yok</p><p style="font-family:var(--sans);font-size:11px;color:#8D9AA1;margin-top:8px">Bir haberde “Kaydet”e bas. Aynı düğmeye tekrar bastığında listeden çıkar.</p></div>`;
+    } else {
+      h+=`<div class="section-title"><span>Okuma Listem</span><span class="unread-count">${savedArticles.length} kayıtlı haber</span></div>`;
+      savedArticles.forEach((a,i)=>{
+        const savedTime=a.savedAt?timeAgo(a.savedAt):"", meta=CATEGORIES.find(c=>c.id===a.fromCategory), label=meta?.label||"";
+        h+=`<article class="article-card" style="animation-delay:${Math.min(i*.04,.6)}s">
+          <div class="article-source">${label?label+' · ':''}${a.source}${a.author?' · '+a.author:''}</div>
+          <a href="${a.link}" target="_blank" rel="noopener"><div class="article-title">${a.title}</div></a>
+          <div class="article-summary">${a.summary}</div>
+          <div class="article-meta"><span>${savedTime?'Kaydedildi '+savedTime:a.time||''}</span><button class="text-action active" onclick="toggleSave('${a.id}')">Listeden kaldır</button></div>
+        </article>`;
+      });
+    }
+    main.innerHTML=h; return;
+  }
+
+  if(activeTab==="columns") {
+    h+='<div class="authors-panel"><div class="section-title"><span>Yazarlar & Düşünürler</span></div>';
+    const sorted=[...SUGGESTED_AUTHORS].sort((a,b)=>{const sa=(prefs.likedAuthors[a.name]||0)-(prefs.dislikedAuthors[a.name]||0),sb=(prefs.likedAuthors[b.name]||0)-(prefs.dislikedAuthors[b.name]||0);if(a.isFavorite&&!b.isFavorite)return-1;if(!a.isFavorite&&b.isFavorite)return 1;return sb-sa;});
+    sorted.forEach(a=>{
+      const f=followedAuthors.has(a.name),liked=(prefs.likedAuthors[a.name]||0)>0,disliked=(prefs.dislikedAuthors[a.name]||0)>0;
+      h+=`<div class="author-row"><div class="author-info"><div class="author-avatar">${a.name.charAt(0).toUpperCase()}</div><div><span class="author-name">${a.name}</span>${a.isFavorite?'<span class="fav-badge">Favori</span>':''}<div class="author-reason">${a.reason}</div></div></div><div class="author-actions"><button class="author-vote ${liked?'active':''}" onclick="voteAuthor('${a.name.replace(/'/g,"\'")}','like')">Beğen</button><button class="author-vote ${disliked?'active':''}" onclick="voteAuthor('${a.name.replace(/'/g,"\'")}','dislike')">Az göster</button><button class="follow-btn ${f?'following':''}" onclick="toggleFollow('${a.name.replace(/'/g,"\'")}')">${f?'Takipte':'Takip et'}</button></div></div>`;
+    });
+    h+='</div>';
+  }
+
+  if(activeTab==="general") {
+    h+=`<div class="sources-line">TR Siyaset · Yapay Zeka · Teknoloji · Sağlık · Spor</div>
+        <div class="general-note">Son 72 saatin en önemli haberleri — birden çok kaynakta çıkanlar öne alınır.</div>`;
+  } else {
+    h+=`<div class="sources-line">${(FEEDS[activeTab]||[]).map(f=>f.name).join(" · ")}</div>`;
+  }
+
+  if(totalVotes>0) {
+    h+=`<div class="prefs-bar-wrap"><span class="prefs-bar"><strong>${totalVotes} tercih</strong> sıralamayı etkiliyor · <span class="reset-link" onclick="resetPrefs()">sıfırla</span></span></div>`;
+  }
+
+  if(!isL){
+    const label=activeTab==="general"?(hasF?"Genel akışı yenile":"Günün seçkisini getir"):(hasF?"Yenile":cat.label+" haberlerini getir");
+    h+=`<button class="fetch-btn" id="fetchBtn">${label}</button>`;
+  }
+
+  if(isL){
+    const label=activeTab==="general"?`Kategoriler taranıyor… (${cur.length} öne çıkan bulundu)`:`Kaynaklar yükleniyor… (${cur.length} haber bulundu)`;
+    h+=`<div class="loading-wrap"><div class="loading-dots"><span></span><span></span><span></span></div><div class="loading-text">${label}</div></div>`;
+    if(cur.length===0){
+      for(let x=0;x<3;x++) h+=`<div class="skeleton-card"><div class="skeleton-body"><div class="skeleton-line w40"></div><div class="skeleton-line w90"></div><div class="skeleton-line w60"></div></div></div>`;
+    }
+  }
+
+  if(cur.length>0){
+    if(activeTab==="general"){
+      const fil=cur;
+      h+=`<div class="section-title"><span>Bugünün Sayfası</span><span class="unread-count">${fil.length} seçili haber</span></div>`;
+
+      const lead=fil[0];
+      const side=fil.slice(1,3);
+      const grid=fil.slice(3,7);
+      const rest=fil.slice(7);
+
+      if(lead){
+        h+=`<section class="front-page">
+          <article class="lead-story">
+            <div class="kicker">${kicker(lead)}</div>
+            <h2 class="lead-title"><a href="${lead.link}" target="_blank" rel="noopener">${lead.title}</a></h2>
+            <div class="lead-summary">${lead.summary}</div>
+            ${tools(lead)}
+          </article>
+          <div class="front-side">
+            ${side.map(a=>`<article class="mini-story">
+              <div class="kicker">${kicker(a)}</div>
+              <h3 class="mini-title"><a href="${a.link}" target="_blank" rel="noopener">${a.title}</a></h3>
+              <div class="mini-summary">${a.summary}</div>
+              ${tools(a,true)}
+            </article>`).join("")}
+          </div>
+        </section>`;
+      }
+
+      if(grid.length){
+        h+=`<div class="front-grid">`;
+        grid.forEach(a=>{
+          h+=`<article class="grid-story">
+            <div class="article-source">${kicker(a)}</div>
+            <a href="${a.link}" target="_blank" rel="noopener"><div class="article-title">${a.title}</div></a>
+            <div class="article-summary">${a.summary}</div>
+            ${tools(a,true)}
+          </article>`;
+        });
+        h+=`</div>`;
+      }
+
+      if(rest.length){
+        h+=`<div class="section-title"><span>Akış</span><span class="unread-count">${rest.length} haber daha</span></div>`;
+        rest.forEach((a,i)=>{
+          h+=`<article class="article-card" style="animation-delay:${Math.min(i*.035,.6)}s">
+            <div class="article-source">${kicker(a)}</div>
+            <a href="${a.link}" target="_blank" rel="noopener"><div class="article-title">${a.title}</div></a>
+            <div class="article-summary">${a.summary}</div>
+            ${tools(a)}
+          </article>`;
+        });
+      }
+    } else {
+      const srcs=[...new Set(cur.map(a=>a.source))];
+      if(srcs.length>1){
+        h+='<div class="filter-bar">';
+        h+=`<button class="filter-chip ${sourceFilter==='all'?'active':''}" onclick="setSourceFilter('all')">Tümü</button>`;
+        srcs.forEach(s=>h+=`<button class="filter-chip ${sourceFilter===s?'active':''}" onclick="setSourceFilter('${s.replace(/'/g,"\'")}')">${s}</button>`);
+        h+='</div>';
+      }
+
+      const fil=sourceFilter==="all"?cur:cur.filter(a=>a.source===sourceFilter);
+      h+=`<div class="section-title"><span>${cat.label}${sourceFilter!=='all'?' · '+sourceFilter:''}</span><span class="unread-count">${fil.length} haber</span></div>`;
+
+      fil.forEach((a,i)=>{
+        const sc=a._score||0,boosted=sc>2,demoted=sc<-2,v=articleVotes[a.id];
+        h+=`<article class="article-card ${boosted?'boosted':''} ${demoted?'demoted':''}" style="animation-delay:${Math.min(i*.04,.8)}s">
+          <div class="article-source">${a.source}${a.author?' · '+a.author:''}${a._dupSources?' · '+a._dupSources.length+' kaynakta':''}${boosted?' · <span class="boost-indicator">Sana yakın</span>':''}</div>
+          <a href="${a.link}" target="_blank" rel="noopener"><div class="article-title">${a.title}</div></a>
+          <div class="article-summary">${a.summary}</div>
+          <div class="article-meta"><span>${a.time||''}</span><button class="text-action ${v==='like'?'active':''}" onclick="voteArticle('${a.id}','like')">Beğen</button><button class="text-action ${v==='dislike'?'active':''}" onclick="voteArticle('${a.id}','dislike')">Az göster</button><button class="text-action ${isSaved(a.id)?'active':''}" onclick="toggleSave('${a.id}')">${isSaved(a.id)?'Kaydedildi':'Kaydet'}</button></div>
+        </article>`;
+      });
+    }
+  }
+
+  if(!isL&&!hasF){
+    const txt=activeTab==="general"?"Bugünün genel seçkisini oluşturmak için butona tıkla":"Haberleri yüklemek için butona tıkla";
+    h+=`<div class="empty-state"><div class="empty-icon">${cat.icon}</div><p class="empty-text">${txt}</p></div>`;
+  }
+
+  if(!isL&&feedErrors.length>0&&hasF){
+    h+=`<div style="margin-top:18px;padding:12px 0;border-top:1px solid #D9E1E5;font-family:var(--sans);font-size:10.5px;color:#D45E55">Bazı kaynaklar yüklenemedi: ${feedErrors.join(", ")}<span style="display:block;margin-top:4px;color:#929CA2">Birkaç dakika sonra tekrar deneyebilirsin.</span></div>`;
+  }
+
+  main.innerHTML=h;
+  const btn=document.getElementById("fetchBtn");
+  if(btn)btn.onclick=()=>fetchCategory(activeTab);
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+renderTabs();
+renderContent();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
