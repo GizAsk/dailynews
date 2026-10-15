@@ -1,5 +1,5 @@
-const CACHE = "bulten-shell-v1";
-const SHELL = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
+const CACHE = "bulten-shell-v2";
+const SHELL = ["./manifest.json", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)));
@@ -13,10 +13,17 @@ self.addEventListener("activate", (e) => {
   self.clients.claim();
 });
 
-// Only cache the app shell itself; always go to network for RSS/news APIs.
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
-  if (url.origin !== location.origin) return; // let external API calls pass through untouched
+  if (url.origin !== location.origin) return;
+
+  if (e.request.mode === "navigate" || url.pathname.endsWith("index.html") || url.pathname.endsWith("/")) {
+    e.respondWith(
+      fetch(e.request).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
   e.respondWith(
     caches.match(e.request).then((cached) => cached || fetch(e.request))
   );
