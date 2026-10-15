@@ -851,8 +851,9 @@ const SUGGESTED_AUTHORS = [
 ];
 
 const RSS2JSON = "https://api.rss2json.com/v1/api.json?rss_url=";
-const TOPTAL = "https://www.toptal.com/developers/feed2json/convert?url=";
 const ALLORIGINS = "https://api.allorigins.win/get?url=";
+const CODETABS = "https://api.codetabs.com/v1/proxy?quest=";
+const CORSPROXY_IO = "https://corsproxy.io/?url=";
 
 // ══════════════════════════════════════
 // STATE
@@ -1039,28 +1040,9 @@ async function fetchViaRss2Json(url) {
   return d.items.map(it => ({ title: it.title, description: it.description, link: it.link, author: it.author, pubDate: it.pubDate }));
 }
 
-async function fetchViaToptal(url) {
-  const r = await fetch(TOPTAL + encodeURIComponent(url));
-  if (!r.ok) throw new Error("toptal " + r.status);
-  const d = await r.json();
-  if (!d.items || d.items.length === 0) throw new Error("toptal empty");
-  return d.items.map(it => ({
-    title: it.title,
-    description: it.content_html || it.summary || "",
-    link: it.url || it.external_url || "",
-    author: it.author ? it.author.name : "",
-    pubDate: it.date_published || "",
-  }));
-}
-
-async function fetchViaAllOrigins(url) {
-  const r = await fetch(ALLORIGINS + encodeURIComponent(url));
-  if (!r.ok) throw new Error("allorigins " + r.status);
-  const d = await r.json();
-  if (!d.contents) throw new Error("allorigins empty");
-  // Parse XML manually
+function parseRssXml(xmlText) {
   const parser = new DOMParser();
-  const doc = parser.parseFromString(d.contents, "text/xml");
+  const doc = parser.parseFromString(xmlText, "text/xml");
   const items = doc.querySelectorAll("item");
   if (items.length === 0) {
     // Try Atom format
@@ -1088,13 +1070,35 @@ async function fetchViaAllOrigins(url) {
   });
 }
 
+async function fetchViaAllOrigins(url) {
+  const r = await fetch(ALLORIGINS + encodeURIComponent(url));
+  if (!r.ok) throw new Error("allorigins " + r.status);
+  const d = await r.json();
+  if (!d.contents) throw new Error("allorigins empty");
+  const items = parseRssXml(d.contents);
+  if (items.length === 0) throw new Error("allorigins no items");
+  return items;
+}
+
+// Generic fallback for proxies that hand back the raw feed body (no JSON wrapper)
+async function fetchViaRawProxy(name, prefix, url) {
+  const r = await fetch(prefix + encodeURIComponent(url));
+  if (!r.ok) throw new Error(name + " " + r.status);
+  const text = await r.text();
+  const items = parseRssXml(text);
+  if (items.length === 0) throw new Error(name + " empty");
+  return items;
+}
+
 async function fetchFeedRaw(url) {
-  // Try proxies in order
+  // Try proxies in order — each one that hangs/CORS-blocks falls through to the next
   try { return await fetchViaRss2Json(url); } catch(e) { console.warn("rss2json fail:", e.message); }
   await delay(200);
-  try { return await fetchViaToptal(url); } catch(e) { console.warn("toptal fail:", e.message); }
-  await delay(200);
   try { return await fetchViaAllOrigins(url); } catch(e) { console.warn("allorigins fail:", e.message); }
+  await delay(200);
+  try { return await fetchViaRawProxy("codetabs", CODETABS, url); } catch(e) { console.warn("codetabs fail:", e.message); }
+  await delay(200);
+  try { return await fetchViaRawProxy("corsproxy.io", CORSPROXY_IO, url); } catch(e) { console.warn("corsproxy.io fail:", e.message); }
   return null;
 }
 
