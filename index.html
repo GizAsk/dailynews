@@ -850,10 +850,10 @@ const SUGGESTED_AUTHORS = [
   { name: "Shane Parrish", reason: "Farnam Street — zihinsel modeller, karar verme", tags: ["philosophy","leadership"] },
 ];
 
+const WORKER = "https://bulten-proxy.gizgask.workers.dev/?url=";
 const RSS2JSON = "https://api.rss2json.com/v1/api.json?rss_url=";
 const ALLORIGINS = "https://api.allorigins.win/get?url=";
 const CODETABS = "https://api.codetabs.com/v1/proxy?quest=";
-const CORSPROXY_IO = "https://corsproxy.io/?url=";
 
 // ══════════════════════════════════════
 // STATE
@@ -1091,14 +1091,18 @@ async function fetchViaRawProxy(name, prefix, url) {
 }
 
 async function fetchFeedRaw(url) {
-  // Try proxies in order — each one that hangs/CORS-blocks falls through to the next
+  // Our own Cloudflare Worker first — reliable for feeds Google doesn't block (i.e. everything
+  // except news.google.com searches, which Google blocks from datacenter IPs regardless of proxy).
+  try { return await fetchViaRawProxy("worker", WORKER, url); } catch(e) { console.warn("worker fail:", e.message); }
+  await delay(200);
+  // Fallback chain for whatever the worker can't reach (mainly Google News queries) —
+  // these are free third-party services with no uptime guarantee, so each one that
+  // hangs/CORS-blocks/errors just falls through to the next.
   try { return await fetchViaRss2Json(url); } catch(e) { console.warn("rss2json fail:", e.message); }
   await delay(200);
   try { return await fetchViaAllOrigins(url); } catch(e) { console.warn("allorigins fail:", e.message); }
   await delay(200);
   try { return await fetchViaRawProxy("codetabs", CODETABS, url); } catch(e) { console.warn("codetabs fail:", e.message); }
-  await delay(200);
-  try { return await fetchViaRawProxy("corsproxy.io", CORSPROXY_IO, url); } catch(e) { console.warn("corsproxy.io fail:", e.message); }
   return null;
 }
 
